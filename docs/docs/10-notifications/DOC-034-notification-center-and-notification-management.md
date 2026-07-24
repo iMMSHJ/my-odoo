@@ -77,7 +77,7 @@ Navbar
 
 ```
 
-Logo | Menu | Search | Profile                              🔔
+Logo | Menu | Search | 🔔 Notification | Profile
 
 ```
 
