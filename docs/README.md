@@ -77,7 +77,15 @@
 
 ## 12 — Technical Design
 طراحی فنی ماژول‌های اختصاصی (سطح پیاده‌سازی).
-- [DOC-038 — pps_ticket_wizard Technical Design](12-technical-design/DOC-038-pps-ticket-wizard-technical-design.md) *(Draft)*
+- [DOC-038 — pps_ticket_wizard Technical Design](12-technical-design/DOC-038-pps-ticket-wizard-technical-design.md)
+
+## 13 — Business Lines & Integration
+مدل کسب‌وکار چندخطی (فروش دستگاه/قطعات/نرم‌افزار/آموزش/IT) و ارتباط آن با هسته Service Management.
+- [DOC-039 — Multi-Line Business Model & Sales↔Service Integration](13-business-lines/DOC-039-multi-line-business-model-and-sales-service-integration.md)
+
+## 14 — Prerequisites
+پیش‌نیازهای فنی فاز ۰ — نسخه Odoo، ماژول‌های OCA بررسی‌شده، ریسک‌های سازگاری.
+- [DOC-040 — OCA & Prerequisites Plan](14-prerequisites/DOC-040-oca-and-prerequisites-plan.md)
 
 ---
 
