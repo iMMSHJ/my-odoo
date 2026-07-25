@@ -1,0 +1,108 @@
+# DOC-048 — Phase 0 Deploy Runbook
+
+**Status:** LOCKED
+**Phase:** Phase 0 (اجرای مستقیم)
+**Document Type:** Runbook
+**Traces to:** DOC-014, DOC-015, DOC-037, DOC-040, DOC-041, DOC-047
+
+---
+
+# 1. Objective
+
+دستورالعمل قدم‌به‌قدم اجرای فاز ۰ روی محیط Staging موجود (Odoo 19 Community، طبق DOC-040 §8). این سند تنها Runbook اجرایی این نشست است — بقیه مستندات معماری/طراحی‌اند، این یکی عملیاتی است.
+
+---
+
+# 2. پیش‌نیاز
+
+- دسترسی SSH/Admin به سرور Staging
+- دسترسی Settings > Apps در Odoo (طبق اسکرین‌شات قبلی)
+- اتصال اینترنت سرور برای Clone کردن Repositoryهای OCA
+
+---
+
+# 3. مرحله ۱ — پاکسازی
+
+```bash
+# اتصال به سرور Staging
+ssh <staging-server>
+
+# غیرفعال‌سازی و حذف ماژول تست
+# از UI: Settings > Apps > جستجوی "vina_base" > Uninstall
+# یا از خط فرمان:
+odoo-bin -d <db_name> -u vina_base --stop-after-init  # اگر نیاز به Uninstall via shell بود، از UI انجام شود (امن‌تر)
+```
+
+**تأیید:** بعد از Uninstall، مطمئن شوید `vina_base` دیگر در لیست Apps دیده نمی‌شود.
+
+---
+
+# 4. مرحله ۲ — نصب ماژول اثبات‌شده (`contract`)
+
+```bash
+cd /path/to/custom-addons
+git clone -b 19.0 https://github.com/OCA/contract.git oca-contract
+```
+
+سپس از UI: Apps > Update Apps List > جستجوی «Contract» > Install (فقط ماژول پایه `contract`، بدون زیرماژول‌های اضافه مثل `contract_sale` مگر نیاز اثبات شود — طبق اصل Watchlist DOC-040).
+
+**تأیید:** ساخت یک `contract.contract` تستی از UI و بررسی صحت نصب.
+
+---
+
+# 5. مرحله ۳ — بررسی دو Open Item (طبق DOC-047 §3)
+
+## 5.1 بررسی `hr_attendance`
+
+```
+Settings > Apps > جستجوی "Attendances"
+```
+
+- اگر نصب است: ✅ ثبت شود در این سند (بخش ۷).
+- اگر نصب نیست: تصمیم — طبق اصل سادگی v1، اگر نیاز فوری Technician Dashboard (DOC-045 §6.2) نیست، نصب را به فاز ۶ موکول کنید؛ در غیر این صورت همین‌جا نصب شود (رایگان، بدون وابستگی OCA).
+
+## 5.2 بررسی `sign_oca` روی Branch 19.0
+
+```bash
+cd /path/to/custom-addons
+git clone -b 19.0 https://github.com/OCA/... sign_oca   # آدرس دقیق را از Apps Store OCA تأیید کنید
+```
+
+- اگر Clone و Install موفق بود: ✅ ثبت در بخش ۷، استفاده در `pps_portal` (DOC-042 §7).
+- اگر Branch 19.0 موجود/پایدار نبود: **Fallback فعال می‌شود** — تأیید سرویس با Checkbox + Timestamp + IP Log (از قبل در DOC-042 §10.1 به‌عنوان جایگزین تعریف شده، بدون نیاز به تصمیم جدید).
+
+---
+
+# 6. مرحله ۴ — تأیید نهایی محیط پایه
+
+چک‌لیست قبل از شروع کدنویسی ماژول‌های `pps_*`:
+
+- [ ] `vina_base` حذف شد
+- [ ] `contract` (OCA) نصب و تست شد
+- [ ] وضعیت `hr_attendance` مشخص و ثبت شد
+- [ ] وضعیت `sign_oca` مشخص و ثبت شد (یا Fallback تأیید شد)
+- [ ] لیست نهایی ماژول‌های نصب‌شده Export و در کنار DOC-040 آرشیو شد (برای رهگیری آینده، مشابه فایل اکسل اولیه)
+
+---
+
+# 7. ثبت نتیجه (تکمیل توسط تیم اجرا)
+
+> این بخش بعد از اجرای واقعی مراحل بالا تکمیل می‌شود — جای خالی عمدی است، نه نقص سند.
+
+| آیتم | نتیجه | تاریخ |
+|---|---|---|
+| `vina_base` حذف شد | ✅ (به‌همراه چند ماژول Vina دیگر که روی دیسک بودن) | ۲۵ تیر ۱۴۰۵ |
+| `contract` نصب شد | ✅ — تأیید از لاگ (`Module contract loaded in 3.15s`) و اجرای موفق Cron Job | ۲۵ تیر ۱۴۰۵ |
+| `hr_attendance` | ⬜ هنوز بررسی نشده | |
+| `sign_oca` | ⬜ هنوز بررسی نشده | |
+| **یافته اضافه (خارج از چک‌لیست اصلی):** `persian_calendar` (third-party، از قبل نصب بود) با Odoo 19 ناسازگار بود و Uninstall شد — جزئیات در DOC-049 | ✅ حل شد | ۲۵ تیر ۱۴۰۵ |
+
+---
+
+# 8. قدم بعدی
+
+با تکمیل چک‌لیست بخش ۶، محیط پایه آماده شروع توسعه ماژول‌های `pps_*` طبق ترتیب Roadmap (DOC-037 فاز ۲: `pps_asset` → `pps_package` → `pps_contract` → `pps_sla`) است.
+
+---
+
+**Status:** LOCKED

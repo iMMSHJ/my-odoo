@@ -74,6 +74,8 @@
 ## 11 — Roadmap
 نقشه راه اجرایی پروژه (فازبندی و وابستگی‌ها).
 - [DOC-037 — Implementation Roadmap](11-roadmap/DOC-037-implementation-roadmap.md)
+- [DOC-047 — v1 Blueprint Completion Summary & Phase 0 Readiness](11-roadmap/DOC-047-v1-blueprint-completion-summary.md)
+- [DOC-048 — Phase 0 Deploy Runbook](11-roadmap/DOC-048-phase-0-deploy-runbook.md)
 
 ## 12 — Technical Design
 طراحی فنی ماژول‌های اختصاصی (سطح پیاده‌سازی).
@@ -82,6 +84,9 @@
 - [DOC-042 — pps_portal Technical Design](12-technical-design/DOC-042-pps-portal-technical-design.md)
 - [DOC-043 — pps_service_report Technical Design](12-technical-design/DOC-043-pps-service-report-technical-design.md)
 - [DOC-044 — pps_theme Design Tokens](12-technical-design/DOC-044-pps-theme-design-tokens.md) *(Draft — منتظر برندبوک)*
+- [DOC-045 — pps_dashboard Technical Design](12-technical-design/DOC-045-pps-dashboard-technical-design.md) *(Draft)*
+- [DOC-046 — Unified Security Model](12-technical-design/DOC-046-unified-security-model.md)
+- [DOC-049 — Persian Localization Plan (تقویم/فونت/زبان/اسناد)](12-technical-design/DOC-049-persian-localization-plan.md) *(Draft — منتظر تست فونت PDF)*
 
 ## 13 — Business Lines & Integration
 مدل کسب‌وکار چندخطی (فروش دستگاه/قطعات/نرم‌افزار/آموزش/IT) و ارتباط آن با هسته Service Management.
