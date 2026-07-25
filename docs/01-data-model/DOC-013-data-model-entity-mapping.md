@@ -3,6 +3,8 @@
 
 **Status:** Approved
 
+> **⚠️ اصلاحیه (DOC-041 §2):** سه ردیف جدول Entity Mapping زیر اصلاح شدند: **Asset** (→ `pps.asset` کاملاً اختصاصی، نه `maintenance.equipment`)، **SLA** (→ `pps.sla` کاملاً اختصاصی، نه `helpdesk.sla` که Enterprise-only است)، **Contract** (→ `contract.contract` از OCA، نه `sale.subscription` که Enterprise-only است). جزئیات و دلایل کامل در DOC-041.
+
 ---
 
 # Purpose
@@ -25,10 +27,10 @@
 |-----------------|------------|----------|
 | Customer | res.partner | Extension |
 | Site | res.partner (Child Partner) | Extension |
-| Asset | maintenance.equipment | Extension |
+| Asset | ~~maintenance.equipment~~ → **pps.asset** | ~~Extension~~ → **New (Custom, طبق DOC-041)** |
 | Package | Custom Model | New |
-| Contract | sale.subscription / sale.order | Extension |
-| SLA | helpdesk.sla | Extension |
+| Contract | ~~sale.subscription / sale.order~~ → **contract.contract (OCA)** | Extension (طبق DOC-041) |
+| SLA | ~~helpdesk.sla~~ → **pps.sla** | ~~Extension~~ → **New (Custom, طبق DOC-041)** |
 | Service Request (Ticket) | helpdesk.ticket | Extension |
 | Service Report | Custom Model | New |
 | Parts | product.product | Native |
@@ -85,11 +87,10 @@ Customer
 مدل‌های استاندارد Odoo که فقط فیلدها و منطق موردنیاز پروژه به آن‌ها اضافه می‌شود.
 
 - res.partner
-- maintenance.equipment
+- ~~maintenance.equipment~~ (حذف شد — به‌جای آن `pps.asset` کاملاً اختصاصی)
 - helpdesk.ticket
-- helpdesk.sla
-- sale.subscription (در صورت استفاده)
-- sale.order (در صورت استفاده)
+- ~~helpdesk.sla~~ (حذف شد — به‌جای آن `pps.sla` کاملاً اختصاصی)
+- contract.contract (OCA — طبق DOC-041)
 
 ---
 

@@ -5,6 +5,8 @@
 
 **Status:** Approved
 
+> **⚠️ اصلاحیه (DOC-041):** نگاشت `Asset → maintenance.equipment` در بخش «Odoo Mapping» این سند **اصلاح شد**. تصمیم نهایی: مدل کاملاً اختصاصی `pps.asset` (بدون وابستگی به ماژول `maintenance`) — چون `maintenance.equipment` برای تجهیزات داخلی طراحی شده و مدل درخواست موازی‌اش (`maintenance.request`) با `helpdesk.ticket` تداخل می‌کند. جزئیات کامل: DOC-041 §2 و §4. سایر بخش‌های این سند (Required Fields، Business Rules) بدون تغییر و همچنان معتبرند.
+
 ---
 
 # Purpose
@@ -90,7 +92,7 @@ Asset فقط اطلاعات لازم برای شناسایی دستگاه را �
 |-----------------|------------|--------|
 | Brand | Product Attribute / Custom Dictionary | بررسی |
 | Model | Product Variant / Custom Dictionary | بررسی |
-| Asset | maintenance.equipment | استفاده با توسعه سبک |
+| ~~Asset~~ | ~~maintenance.equipment~~ | **اصلاح شد → `pps.asset` (Custom Model)، طبق DOC-041 §2 و §4** |
 
 ---
 

@@ -78,6 +78,10 @@
 ## 12 — Technical Design
 طراحی فنی ماژول‌های اختصاصی (سطح پیاده‌سازی).
 - [DOC-038 — pps_ticket_wizard Technical Design](12-technical-design/DOC-038-pps-ticket-wizard-technical-design.md)
+- [DOC-041 — Asset / Package / Contract / SLA Technical Design](12-technical-design/DOC-041-asset-package-contract-sla-technical-design.md)
+- [DOC-042 — pps_portal Technical Design](12-technical-design/DOC-042-pps-portal-technical-design.md)
+- [DOC-043 — pps_service_report Technical Design](12-technical-design/DOC-043-pps-service-report-technical-design.md)
+- [DOC-044 — pps_theme Design Tokens](12-technical-design/DOC-044-pps-theme-design-tokens.md) *(Draft — منتظر برندبوک)*
 
 ## 13 — Business Lines & Integration
 مدل کسب‌وکار چندخطی (فروش دستگاه/قطعات/نرم‌افزار/آموزش/IT) و ارتباط آن با هسته Service Management.

@@ -1,0 +1,198 @@
+# DOC-041 — Asset / Package / Contract / SLA — Technical Design
+
+**Status:** LOCKED
+**Phase:** Phase 2 (Custom Data Model Extensions)
+**Document Type:** Technical Design
+**Traces to / Corrects:** DOC-002, DOC-004, DOC-013, DOC-019, DOC-022, DOC-039, DOC-040
+
+---
+
+# 1. Objective
+
+طراحی فنی چهار مدل هسته‌ای سرویس (Asset → Package → Contract → SLA) بر اساس تصمیمات کسب‌وکار قفل‌شده (DOC-002, DOC-004, DOC-019) و **اصلاح دو مورد از DOC-013** که با بررسی محیط واقعی (DOC-040) ناسازگار بودند.
+
+---
+
+# 2. اصلاحیه‌های مهم روی DOC-013 (Entity Mapping)
+
+با بررسی محیط واقعی Community Edition (DOC-040) و بازبینی مشترک با شما، **سه ردیف** جدول Entity Mapping در DOC-013 نیاز به اصلاح دارند:
+
+| Entity | نگاشت قبلی (DOC-013 / DOC-002) | نگاشت اصلاح‌شده | دلیل |
+|---|---|---|---|
+| **Asset** | `maintenance.equipment` (Extension) | **Custom Model (`pps.asset`)** | `maintenance.equipment` برای تجهیزات داخلی شرکت طراحی شده (فیلدهای Employee/Department بی‌ربط) و مدل درخواست داخلی خودش (`maintenance.request`) با `helpdesk.ticket` انتخابی ما تداخل مسیر ایجاد می‌کند. چون فعلاً هیچ دستگاه داخلی مدیریت نمی‌شود (تصمیم صریح پروژه، احتمال بازبینی در v2)، یک مدل سبک کاملاً اختصاصی منطقی‌تر و بدون تداخل است. |
+| SLA | `helpdesk.sla` (Extension) | **Custom Model (`pps.sla`)** | `helpdesk.sla` معادل Enterprise است. معادل OCA آن (`helpdesk_mgmt_sla`) فقط SLA ساده سطح-تیم (روز/ساعت) پشتیبانی می‌کند، نه منطق لایه‌بندی‌شده Package/Contract که DOC-004 و DOC-019 نیاز دارند. پس مطابق تصمیم اولیه پروژه (`pps_sla` کاملاً اختصاصی)، ادامه می‌دهیم — این هم‌راستا با چیزی است که در DOC-012/019 هم از قبل پیش‌بینی شده بود. |
+| Contract | `sale.subscription / sale.order` (Extension) | **`contract.contract`** (Extension از `OCA/contract`, ماژول `contract` — تأیید Branch 19.0 موجود) | `sale.subscription` (اپ Odoo Subscriptions) Enterprise-only است و در Community در دسترس نیست. DOC-004 خودش هم از ابتدا «OCA Contract» را پیش‌بینی کرده بود — این اصلاحیه فقط DOC-013 را با DOC-004 هماهنگ می‌کند. |
+
+> این سه اصلاحیه در بازبینی بعدی مستقیماً در DOC-013 **و DOC-002** اعمال می‌شوند؛ فعلاً منبع مرجع نگاشت صحیح همین سند (DOC-041) است.
+>
+> **یادداشت v2:** اگر در آینده نیاز به مدیریت تجهیزات داخلی شرکت (نه دستگاه مشتری) پیش بیاید، آن‌موقع می‌توان جداگانه از `maintenance.equipment` استفاده کرد — کاملاً مجزا از `pps.asset` که برای دستگاه مشتری است. این دو مفهوم عمداً از هم جدا نگه داشته می‌شوند.
+
+---
+
+# 3. Entity Relationship (نهایی)
+
+```mermaid
+erDiagram
+    RES_PARTNER ||--o{ PPS_ASSET : owns
+    RES_PARTNER ||--o{ RES_PARTNER : "Site (child)"
+    PPS_ASSET }o--o{ PPS_PACKAGE : "member of"
+    PPS_PACKAGE ||--o| CONTRACT_CONTRACT : "has one"
+    CONTRACT_CONTRACT ||--|| PPS_SLA : "has one"
+    PPS_ASSET ||--o{ HELPDESK_TICKET : "subject of"
+    HELPDESK_TICKET }o--|| PPS_SLA : "resolved via (Package→Contract→SLA)"
+```
+
+**نکته مهم (طبق DOC-039 §3):** یک Asset می‌تواند بدون Package/Contract هم وجود داشته باشد («Asset بدون قرارداد») — رابطه Package اختیاری است، نه اجباری.
+
+---
+
+# 4. `pps_asset` — Custom Model (اصلاح‌شده، بدون وابستگی به `maintenance`)
+
+**تصمیم نهایی (بازبینی مشترک):** مدل کاملاً اختصاصی، **نه** Extension روی `maintenance.equipment` — طبق بخش ۲.
+
+## 4.1 فیلدها
+
+| فیلد | نوع | الزامی | منبع تصمیم |
+|---|---|---|---|
+| `name` | Char (Computed: Brand + Model + Serial) | — | نمایش استاندارد Odoo |
+| `pps_serial_number` | Char, **Unique Constraint** | ✅ | DOC-002 BR-001 |
+| `pps_brand_id` | Many2one → `pps.asset.brand` (دیکشنری سبک) | ✅ | DOC-002 BR-002 |
+| `pps_model_id` | Many2one → `pps.asset.model` (وابسته به Brand) | ✅ | DOC-002 BR-003 |
+| `pps_manufacture_date` | Date | ✅ | DOC-002 Required Fields |
+| `partner_id` | Many2one → `res.partner` | ✅ | مالک دستگاه (مشتری) — فیلد مستقیم، چون Asset می‌تواند بدون Package باشد (DOC-039 §3) |
+| `pps_condition_grade` | Selection: عالی / خوب / متوسط / نیاز به بازبینی | فقط استوک | DOC-039 §8 |
+| `pps_condition_note` | Text (آزاد) | ❌ | DOC-039 §8 |
+| `pps_warranty_period` | Integer (ماه) | ❌ | DOC-039 §8 — مقدار پیش‌فرض بر اساس نو/استوک متفاوت |
+| `pps_is_service_asset` | Boolean (Computed از دسته محصول فروش) | — | DOC-039 §3.2 — مشخص می‌کند این تجهیز از فروش دستگاه کامل ساخته شده |
+| `pps_location_id` | Many2one → `res.partner` (Child/Site) یا Text آزاد | ✅ | DOC-038 §4 (Device Location) |
+| `pps_package_id` | Many2one → `pps.package` | ❌ (Optional — «بدون قرارداد» مجاز است) | DOC-039 §3، DOC-019 §4 |
+| `ticket_ids` | One2many → `helpdesk.ticket` | — | تاریخچه سرویس — **تنها** مسیر تاریخچه (بدون `maintenance.request` موازی) |
+
+## 4.2 قوانین (از DOC-002 مستقیماً پیاده‌سازی می‌شوند)
+
+- `pps_serial_number` باید `sql_constraint` یکتا داشته باشد (BR-001).
+- `pps_brand_id` و `pps_model_id` فقط توسط Internal Users قابل ایجاد/ویرایش‌اند (BR-004) — از طریق Record Rule، نه مخفی‌سازی UI.
+- Domain فیلتر روی `pps_model_id` بر اساس `pps_brand_id` انتخاب‌شده (BR-003 — وابستگی Model به Brand).
+- ثبت Ticket برای هر Asset، صرف‌نظر از داشتن Package/Contract، مجاز است (BR-005) — یعنی هیچ Constraint سطح دیتابیس نباید ثبت Ticket بدون Package را مسدود کند.
+- **یک مسیر واحد تاریخچه سرویس:** فقط از طریق `helpdesk.ticket` (`ticket_ids`)؛ هیچ مدل درخواست موازی (مثل `maintenance.request`) در سیستم وجود ندارد.
+
+## 4.3 `pps_asset_model` — دیکشنری برند/مدل
+
+مدل سبک کمکی (نه Product، طبق یادداشت DOC-002 که Brand/Model را «Dictionary» می‌داند، نه کاتالوگ فروش):
+
+```
+pps.asset.brand
+  - name
+
+pps.asset.model
+  - name
+  - brand_id (Many2one → pps.asset.brand)
+```
+
+> طبق DOC-039 §7، این دیکشنری همان تگ‌های ساده‌ای هستند که برای فیلتر سازگاری قطعات یدکی (بخش ۶) هم بازاستفاده می‌شوند — یک منبع واحد برند/مدل در کل سیستم.
+
+---
+
+# 5. `pps_package` — Custom Model
+
+طبق DOC-013 (بدون معادل مستقیم در Odoo) و DOC-019 (تعریف کامل کسب‌وکار).
+
+## 5.1 فیلدها
+
+| فیلد | نوع | یادداشت |
+|---|---|---|
+| `name` | Char | نام/کد Package |
+| `partner_id` | Many2one → `res.partner` | مشتری صاحب Package |
+| `asset_ids` | One2many → `maintenance.equipment` (معکوس `pps_package_id`) | چند Asset در یک Package (DOC-019 §4) |
+| `contract_id` | Many2one → `contract.contract` | هر Package دقیقاً یک Contract (DOC-019 §5) |
+| `state` | Selection: Draft / Active / Expired | چرخه حیات ساده |
+
+## 5.2 قوانین
+
+- یک Package **دقیقاً یک** Contract دارد (DOC-019 §5) — `contract_id` باید `required` باشد در وضعیت Active، ولی در Draft می‌تواند خالی باشد (برای فرآیند فروش تدریجی طبق DOC-039 §3: Asset اول ساخته می‌شود، Contract بعداً و جدا ثبت می‌شود).
+- Package **هرگز** وارد Inventory Flow، Product Catalog، Marketplace یا فروش عمومی نمی‌شود (DOC-019 §3 — Exclusion صریح).
+
+---
+
+# 6. `pps_contract` — Extension روی `contract.contract` (OCA)
+
+## 6.1 وابستگی ماژول
+
+`contract` (از `OCA/contract`, Branch 19.0 — تأیید‌شده در جستجوی DOC-040) — ماژول پایه Community-سازگار برای قرارداد‌های تکرارشونده.
+
+## 6.2 فیلدهای اضافه‌شده (`_inherit = 'contract.contract'`)
+
+| فیلد | نوع | یادداشت |
+|---|---|---|
+| `pps_package_id` | Many2one → `pps.package` | ارتباط معکوس (یک Contract متعلق به یک Package) |
+| `pps_sla_id` | Many2one → `pps.sla` | هر Contract دقیقاً یک SLA (DOC-019 §6) |
+
+## 6.3 خارج از Scope این سند (طبق DOC-004 §Exclusions)
+
+قیمت، شرایط پرداخت، مدت قرارداد و نوع قرارداد — این‌ها از طریق فیلدهای استاندارد خود ماژول `contract` (Recurrence, Invoicing Rules) مدیریت می‌شوند، نیازی به فیلد اضافه در v1 نیست.
+
+---
+
+# 7. `pps_sla` — Custom Model
+
+بر اساس آیتم‌های دقیق DOC-004 §SLA Items — **یک Template**، نه محاسبه پویا.
+
+## 7.1 فیلدها
+
+| فیلد | نوع | مقادیر نمونه | منبع |
+|---|---|---|---|
+| `name` | Char | Bronze / Silver / Gold / Platinum (فقط عنوان تجاری) | DOC-004 BR-003, BR-004 |
+| `remote_response_time` | Selection/Float (ساعت) | ۲ ساعت، ۴ ساعت، ۱ روز کاری، ۲ روز کاری، ۵ روز کاری | DOC-004 §Response |
+| `working_calendar_id` | Many2one → `resource.calendar` | 8×5 یا 24×7 | DOC-004 §Working Calendar |
+| `remote_support` | Selection: Included / Optional / Not Included | | DOC-004 §Remote Support |
+| `onsite_response_time` | Selection/Float | زمان اعزام کارشناس حضوری | DOC-004 §Onsite Service |
+| `spare_parts_commitment` | Selection: Included / Chargeable / Best Effort | | DOC-004 §Spare Parts |
+| `loan_device_commitment` | Selection: Included / Optional / Not Included | | DOC-004 §Loan Device |
+| `preventive_maintenance_frequency` | Selection: None / Monthly / Quarterly / Semi Annual / Annual / Custom | | DOC-004 §Preventive Maintenance |
+| `is_default_fallback` | Boolean | فقط یک رکورد `True` — سطح پیش‌فرض برای مشتری بدون Contract (DOC-039 §10.1) | DOC-039 §10.1 |
+
+## 7.2 قوانین محاسبه در زمان Ticket (طبق DOC-004 §Ticket Processing)
+
+```mermaid
+flowchart LR
+    T["Ticket ثبت شد"] --> A{"Asset دارای\nPackage فعال است؟"}
+    A -->|بله| B["SLA از\nPackage → Contract → SLA"]
+    A -->|خیر| C["SLA = رکورد\nis_default_fallback=True"]
+    B --> D["اعمال روی Ticket:\nResponse Time, Calendar,\nOnsite Response, ..."]
+    C --> D
+```
+
+- SLA به Ticket **در لحظه ثبت** متصل می‌شود (Snapshot)، نه Live Reference — تا تغییر بعدی SLA روی Ticketهای قبلی اثر نگذارد (اصل ثبات تاریخی، سازگار با DOC-021).
+- اعتبار مالی/اعتباری مشتری (DOC-004 §Customer Credit) SLA را تغییر نمی‌دهد — فقط هشدار به Service Manager نمایش داده می‌شود (بدون فیلد جدید در `pps_sla`، منطق در `pps_ticket_wizard`/Controller پیاده می‌شود).
+
+---
+
+# 8. Module Dependency Summary (به‌روزرسانی DOC-012/DOC-040)
+
+```
+pps_asset
+  depends: base (Standard Odoo) — بدون وابستگی به maintenance
+
+pps_package
+  depends: pps_asset, contract (OCA)
+
+pps_contract  (توسعه روی contract.contract)
+  depends: contract (OCA), pps_package
+
+pps_sla
+  depends: resource (Standard Odoo), pps_contract
+```
+
+**افزودنی به Watchlist DOC-040 §3.3:** ماژول `contract` (از `OCA/contract`) باید به لیست نصب فاز ۰ اضافه شود — این یک نیاز اثبات‌شده است، نه احتمالی.
+
+**حذف‌شده از نیازها:** ماژول `maintenance` استاندارد Odoo — دیگر پیش‌نیاز `pps_asset` نیست (طبق تصمیم بخش ۲).
+
+---
+
+# 9. Resolved
+
+سؤال قبلی درباره نصب بودن ماژول `maintenance` **منتفی شد** — چون `pps_asset` دیگر به آن وابسته نیست (بخش ۲ و ۴).
+
+---
+
+# DOC-041 — LOCKED ✅
