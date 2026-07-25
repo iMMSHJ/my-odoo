@@ -86,7 +86,7 @@
 - [DOC-044 — pps_theme Design Tokens](12-technical-design/DOC-044-pps-theme-design-tokens.md) *(Draft — منتظر برندبوک)*
 - [DOC-045 — pps_dashboard Technical Design](12-technical-design/DOC-045-pps-dashboard-technical-design.md) *(Draft)*
 - [DOC-046 — Unified Security Model](12-technical-design/DOC-046-unified-security-model.md)
-- [DOC-049 — Persian Localization Plan (تقویم/فونت/زبان/اسناد)](12-technical-design/DOC-049-persian-localization-plan.md) *(Draft — منتظر تست فونت PDF)*
+- [DOC-049 — Persian Localization Plan (تقویم/فونت/زبان/اسناد)](12-technical-design/DOC-049-persian-localization-plan.md)
 
 ## 13 — Business Lines & Integration
 مدل کسب‌وکار چندخطی (فروش دستگاه/قطعات/نرم‌افزار/آموزش/IT) و ارتباط آن با هسته Service Management.
