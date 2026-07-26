@@ -167,6 +167,7 @@ Settings > Translations > Languages > Add a Language > انتخاب "Persian / �
 | ۲ | نبود `wkhtmltopdf` روی سرور | نصب نسخه Patched شد |
 | ۳ | PATH محدود در `systemd` مانع دیدن `wkhtmltopdf` توسط Odoo شد | اصلاح `Environment=PATH` در `odoo.service` |
 | ۴ | رندر Bidi خراب در PDF (اما نه HTML) | محدودیت شناخته‌شده `wkhtmltopdf`؛ راه‌حل در بخش ۷.۱ برای اسناد `pps_*` |
+| ۵ | Odoo 19 دو تغییر Breaking دیگر در توسعه `pps_asset`: (الف) `_sql_constraints` حذف شده، باید `models.Constraint` استفاده شود؛ (ب) چترِ (Chatter) دستی با `<div class="oe_chatter">` دیگر رندر نمی‌شود، باید از تگ جدید `<chatter/>` استفاده شود | هر دو در کد `pps_asset` اصلاح و تأیید شدند — این الگو باید در تمام ماژول‌های بعدی (`pps_package`, `pps_contract`, ...) از همان ابتدا رعایت شود |
 
 ---
 

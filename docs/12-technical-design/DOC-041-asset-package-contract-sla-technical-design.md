@@ -195,4 +195,21 @@ pps_sla
 
 ---
 
+# 10. یادداشت پیاده‌سازی (به‌روزرسانی حین کدنویسی `pps_asset`، ۲۶ تیر ۱۴۰۵)
+
+دو تغییر Breaking در Odoo 19 هنگام کدنویسی واقعی کشف شد — **باید از همان ابتدا در `pps_package`, `pps_contract`, `pps_sla` هم رعایت شود**:
+
+1. **Constraint یکتا:** به‌جای `_sql_constraints = [(...)]` (منسوخ)، از Attribute جدید استفاده شود:
+   ```python
+   _my_constraint_name = models.Constraint('UNIQUE(field)', 'Error message.')
+   ```
+2. **Chatter:** به‌جای `<div class="oe_chatter"><field name="message_follower_ids"/>...</div>` (دیگر رندر نمی‌شود)، از تگ خودبسته استفاده شود:
+   ```xml
+   <chatter/>
+   ```
+
+جزئیات کامل رویداد در DOC-049 §9 (رویداد شماره ۵).
+
+---
+
 # DOC-041 — LOCKED ✅
