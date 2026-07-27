@@ -84,17 +84,17 @@ gantt
 
 ---
 
-## Phase 2 — Custom Data Model Extensions
+## Phase 2 — Custom Data Model Extensions ✅ تکمیل شد (۲۷ تیر ۱۴۰۵)
 
 **هدف:** ساخت ماژول‌های داده‌ای اختصاصی (بدون UI عمومی) طبق DOC-002, DOC-013, DOC-020.
 
-ماژول‌ها:
-- `pps_asset` — دارایی/تجهیزات مشتری
-- `pps_package` — پکیج سرویس
-- `pps_contract` — قرارداد و اتصال به Subscription/Sales
-- `pps_sla` — منطق SLA اختصاصی روی Helpdesk
+ماژول‌ها (وضعیت نهایی، طبق DOC-041 §11-12):
+- `pps_asset` ✅ — دارایی/تجهیزات مشتری (نصب و تست شد)
+- ~~`pps_package`~~ ❌ حذف شد — تصمیم ساده‌سازی معماری (DOC-041 §11): «Package» فقط اصطلاح است، نه رکورد
+- `pps_contract` ✅ — اتصال مستقیم `pps.asset.contract_id → contract.contract` (نصب و تست شد)
+- `pps_sla` ✅ — الگوهای SLA + اتصال به `contract.contract` (نصب و تست شد)
 
-**خروجی:** مدل داده کامل پروژه در Backend Odoo موجود و قابل تست از طریق Backend استاندارد.
+**خروجی:** مدل داده کامل پروژه در Backend Odoo موجود و قابل تست از طریق Backend استاندارد — ✅ تأیید شد روی محیط واقعی (`vina-odoo`).
 
 ---
 

@@ -93,24 +93,31 @@ pps.asset.model
 
 ---
 
-# 5. `pps_package` — Custom Model
+# 5. «Package» — بازبینی معماری (اصلاح مهم، ۲۶ تیر ۱۴۰۵)
 
-طبق DOC-013 (بدون معادل مستقیم در Odoo) و DOC-019 (تعریف کامل کسب‌وکار).
+**تصمیم قبلی این سند:** یک مدل مستقل `pps.package` با چرخه حیات (Draft/Active/Expired) و رکورد جداگانه.
 
-## 5.1 فیلدها
+**اصلاح نهایی (طبق توضیح مستقیم کارفرما):** «Package» صرفاً یک **اصطلاح کسب‌وکاری** است برای «مجموعه‌ی Assetهایی که زیر یک قرارداد هستند» — نه یک موجودیت مستقل با هویت خودش. دلایل:
 
-| فیلد | نوع | یادداشت |
-|---|---|---|
-| `name` | Char | نام/کد Package |
-| `partner_id` | Many2one → `res.partner` | مشتری صاحب Package |
-| `asset_ids` | One2many → `maintenance.equipment` (معکوس `pps_package_id`) | چند Asset در یک Package (DOC-019 §4) |
-| `contract_id` | Many2one → `contract.contract` | هر Package دقیقاً یک Contract (DOC-019 §5) |
-| `state` | Selection: Draft / Active / Expired | چرخه حیات ساده |
+- ترکیب Assetهای زیر یک قرارداد می‌تواند در قرارداد بعدی **تغییر کند** — نگه‌داشتن یک رکورد ثابت برای این ترکیب معنا ندارد و فقط پیچیدگی/نگهداری اضافه ایجاد می‌کند.
+- تمام چیزی که واقعاً لازم است: هر `pps.asset` بداند به کدام `contract.contract` وصل است.
 
-## 5.2 قوانین
+## 5.1 طراحی ساده‌شده
 
-- یک Package **دقیقاً یک** Contract دارد (DOC-019 §5) — `contract_id` باید `required` باشد در وضعیت Active، ولی در Draft می‌تواند خالی باشد (برای فرآیند فروش تدریجی طبق DOC-039 §3: Asset اول ساخته می‌شود، Contract بعداً و جدا ثبت می‌شود).
-- Package **هرگز** وارد Inventory Flow، Product Catalog، Marketplace یا فروش عمومی نمی‌شود (DOC-019 §3 — Exclusion صریح).
+**مدل `pps.package` کاملاً حذف شد.** به‌جای آن:
+
+```
+pps.asset.contract_id  →  Many2one → contract.contract  (اختیاری)
+```
+
+- «Package» یک مفهوم **محاسبه‌شده/نمایشی** است: یعنی «همه‌ی Assetهایی که `contract_id` یکسان دارند» — نه یک رکورد.
+- این فیلد در ماژول `pps_contract` (نه `pps_asset`) به `pps.asset` اضافه می‌شود، دقیقاً به همان روشی که در بخش ۴ (Extension الگو) توضیح داده شد.
+- تغییر قرارداد یک مشتری = فقط تغییر `contract_id` روی Assetهای مربوطه؛ نیازی به مدیریت وضعیت (Active/Expired) یک رکورد جداگانه نیست.
+
+## 5.2 قوانین (بدون تغییر نسبت به تصمیم اصلی)
+
+- یک Asset **اختیاراً** به یک Contract وصل است (DOC-039 §3 — «Asset بدون قرارداد» مجاز است).
+- این رابطه هرگز وارد Inventory Flow، Product Catalog، Marketplace یا فروش عمومی نمی‌شود (DOC-019 §3 — Exclusion صریح، هنوز معتبر).
 
 ---
 
@@ -124,8 +131,14 @@ pps.asset.model
 
 | فیلد | نوع | یادداشت |
 |---|---|---|
-| `pps_package_id` | Many2one → `pps.package` | ارتباط معکوس (یک Contract متعلق به یک Package) |
+| `pps_asset_ids` | One2many → `pps.asset` (معکوس `contract_id`، بخش ۵.۱) | نمایش «Package» — همه‌ی Assetهای متصل به این قرارداد؛ صرفاً نمایشی، نه رکورد مستقل |
 | `pps_sla_id` | Many2one → `pps.sla` | هر Contract دقیقاً یک SLA (DOC-019 §6) |
+
+## 6.2.1 فیلد اضافه‌شده به `pps.asset` (`_inherit = 'pps.asset'`، طبق بخش ۵.۱)
+
+| فیلد | نوع | یادداشت |
+|---|---|---|
+| `contract_id` | Many2one → `contract.contract` | اختیاری — Asset می‌تواند بدون Contract باشد (DOC-039 §3) |
 
 ## 6.3 خارج از Scope این سند (طبق DOC-004 §Exclusions)
 
@@ -173,15 +186,14 @@ flowchart LR
 pps_asset
   depends: base (Standard Odoo) — بدون وابستگی به maintenance
 
-pps_package
-  depends: pps_asset, contract (OCA)
-
-pps_contract  (توسعه روی contract.contract)
-  depends: contract (OCA), pps_package
+pps_contract  (توسعه روی contract.contract + توسعه روی pps.asset برای فیلد contract_id)
+  depends: contract (OCA), pps_asset
 
 pps_sla
   depends: resource (Standard Odoo), pps_contract
 ```
+
+**تغییر مهم:** `pps_package` به‌عنوان ماژول مستقل **حذف شد** (بخش ۵) — منطقش داخل `pps_contract` ادغام شد.
 
 **افزودنی به Watchlist DOC-040 §3.3:** ماژول `contract` (از `OCA/contract`) باید به لیست نصب فاز ۰ اضافه شود — این یک نیاز اثبات‌شده است، نه احتمالی.
 
@@ -212,4 +224,65 @@ pps_sla
 
 ---
 
-# DOC-041 — LOCKED ✅
+# 11. اصلاحیه معماری — حذف مدل `pps.package` (۲۶ تیر ۱۴۰۵)
+
+**تصمیم جدید (جایگزین بخش ۵):** «Package» یک **اصطلاح** است، نه یک رکورد مستقل. Package یعنی «مجموعه Assetهایی که زیر یک Contract مشترک هستند» — و چون این مجموعه با هر تمدید/تعویض قرارداد می‌تواند تغییر کند، نگه‌داشتن آن به‌عنوان یک رکورد جدا (با چرخه حیات Draft/Active/Expired) پیچیدگی غیرضروری ایجاد می‌کرد.
+
+## 11.1 طراحی جدید (ساده‌شده)
+
+به‌جای مدل `pps.package`، یک رابطه مستقیم:
+
+```
+pps.asset.contract_id  (Many2one → contract.contract, اختیاری)
+```
+
+«Package» دیگر رکورد نیست — فقط یعنی «همه Assetهایی که `contract_id` یکسان دارند» (یک Query ساده، نه یک مدل).
+
+## 11.2 تأثیر
+
+- ماژول `pps_package` **حذف شد** (Uninstall شد، کد آن نگه‌داشته نمی‌شود).
+- بخش ۵ این سند (طراحی `pps_package`) و بخش ۶ (که `pps_contract` را وابسته به `pps_package` می‌دانست) **منسوخ** هستند — `pps_contract` اکنون مستقیماً فیلد `contract_id` را روی `pps.asset` اضافه می‌کند، بدون واسطه.
+- مزیت: تغییر قرارداد یک Asset (مثلاً در تمدید سالانه) فقط با تغییر یک فیلد (`contract_id`) انجام می‌شود، بدون نیاز به مدیریت State یک رکورد Package جداگانه.
+- Diagram ER (بخش ۳) اصلاح می‌شود: `PPS_ASSET }o--o| CONTRACT_CONTRACT : "has (optional)"` — بدون واسطه `PPS_PACKAGE`.
+
+---
+
+# DOC-041 — LOCKED ✅ (با اصلاحیه بخش ۱۱)
+
+---
+
+# 12. وضعیت پیاده‌سازی و تست (به‌روزرسانی نهایی، ۲۷ تیر ۱۴۰۵)
+
+هر چهار بخش این خانواده روی محیط واقعی (`vina-odoo`) پیاده‌سازی و End-to-End تست شدند:
+
+| ماژول | وضعیت | تست انجام‌شده |
+|---|---|---|
+| `pps_asset` | ✅ نصب و تست شد | ساخت Brand/Model وابسته، محاسبه خودکار `name`، فیلتر Model بر اساس Brand، قانون Unique روی Serial Number |
+| `pps_package` | ❌ **حذف شد** (طبق بخش ۱۱) | — |
+| `pps_contract` | ✅ نصب و تست شد | فیلد `contract_id` مستقیم روی `pps.asset` (View Inheritance با `position="after"`) |
+| `pps_sla` | ✅ نصب و تست شد | ساخت چند رکورد SLA (`Gold`, `Free`)، فیلد `is_default_fallback`، اتصال به `contract.contract` از طریق `xpath` روی View مرجع ماژول `contract` |
+
+## 12.1 نکات فنی تکمیلی از پیاده‌سازی واقعی
+
+- **View Inheritance بدون خطا:** توسعه‌ی View مرجع OCA (`contract.contract_contract_customer_form_view`) با `xpath` بدون هیچ ناسازگاری انجام شد — یعنی فرض‌های DOC-041 درباره ساختار این ماژول درست بودند.
+- **فیلد تاریخ تولید:** به‌صورت غیرالزامی نگه داشته شد (نه Required)؛ محدودیت شناخته‌شده — ویجت تاریخ استاندارد Odoo نمی‌تواند «فقط سال» را بدون روز/ماه بپذیرد (وارد کردن سال تنها باعث خالی شدن فیلد می‌شود، نه خطا). **راه‌حل موقت v1:** کاربر تاریخ کامل با روز/ماه فرضی وارد می‌کند. **بهبود آینده (Backlog):** فیلد جدای `pps_manufacture_year` (Integer) در صورت نیاز واقعی اضافه شود.
+- **توسعه‌پذیری `pps.sla`:** مدل به‌گونه‌ای ساده طراحی شده که افزودن فیلدهای جدید در آینده (طبق نیاز کارفرما) بدون تغییر ساختاری ممکن است — فقط افزودن فیلد + `-u pps_sla` از طریق CLI.
+
+## 12.2 الگوهای فنی تثبیت‌شده (برای ماژول‌های بعدی: `pps_ticket_wizard`, `pps_portal`, `pps_dashboard`)
+
+طبق تجربه‌ی این پیاده‌سازی، این الگوها باید در تمام ماژول‌های بعدی رعایت شوند:
+
+1. **Update همیشه از CLI**، نه دکمه Upgrade در UI (طبق DOC-049 رویداد ۵ — دکمه UI گاهی XML جدید را از دیسک نمی‌خواند):
+   ```bash
+   sudo systemctl stop odoo
+   sudo -u odoo /opt/odoo/venv/bin/python3 /opt/odoo/src/odoo/odoo-bin -c /etc/odoo/odoo.conf -d vina-odoo -u <module> --stop-after-init
+   sudo systemctl start odoo
+   ```
+2. `models.Constraint` به‌جای `_sql_constraints` (منسوخ در Odoo 19).
+3. `<chatter/>` به‌جای `<div class="oe_chatter">` دستی (دیگر رندر نمی‌شود در Odoo 19).
+4. **مالکیت فایل:** بعد از هر `sudo tee`، حتماً `sudo chown -R odoo:odoo <module_path>` — چون فایل‌های ساخته‌شده با `sudo` به‌طور پیش‌فرض مالک `root` می‌گیرند.
+5. **بازنویسی کامل View در ماژول‌های Extension، فقط تا حد نیاز:** به‌جای بازنویسی کامل فرم موجود، از `inherit_id` + `xpath`/`position` استفاده شود (مثل الگوی `pps_contract` و اتصال SLA به `contract.contract`).
+
+---
+
+**نتیجه نهایی:** دیتامدل هسته‌ای پروژه (Asset → Contract → SLA) کامل، تست‌شده، و آماده‌ی توسعه‌ی لایه‌ی تجربه کاربری (فاز ۳ Roadmap) است.
