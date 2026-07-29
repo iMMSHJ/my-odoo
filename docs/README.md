@@ -76,6 +76,7 @@
 - [DOC-037 — Implementation Roadmap](11-roadmap/DOC-037-implementation-roadmap.md)
 - [DOC-047 — v1 Blueprint Completion Summary & Phase 0 Readiness](11-roadmap/DOC-047-v1-blueprint-completion-summary.md)
 - [DOC-048 — Phase 0 Deploy Runbook](11-roadmap/DOC-048-phase-0-deploy-runbook.md)
+- [DOC-053 — Production Migration & Backup Plan](11-roadmap/DOC-053-production-migration-and-backup-plan.md)
 
 ## 12 — Technical Design
 طراحی فنی ماژول‌های اختصاصی (سطح پیاده‌سازی).
@@ -99,6 +100,8 @@
 ## 15 — Ecosystem Architecture
 تصمیمات معماری بالادستی (سطح گروه/هلدینگ) و رابطه‌شان با این پروژه.
 - [DOC-050 — Ecosystem Frontend & API Gateway Architecture](15-ecosystem-architecture/DOC-050-ecosystem-frontend-api-gateway-architecture.md)
+- [DOC-051 — Sizing Estimate (Phase 1)](15-ecosystem-architecture/DOC-051-sizing-estimate.md)
+- [DOC-052 — Server Topology & OS Standard](15-ecosystem-architecture/DOC-052-server-topology-os-standard.md)
 
 ---
 
