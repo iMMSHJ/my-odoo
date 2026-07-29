@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Odoo
+*.log
+*.pid
+*.sess
+data/
+backups/
+
+# Virtual Environment
+venv/
+
+# VS Code
+.vscode/
+
+# Linux
+.cache/
+.bash_history
+
+# Git
+.DS_Store
+Thumbs.db
