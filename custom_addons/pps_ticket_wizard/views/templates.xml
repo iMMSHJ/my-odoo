@@ -1,0 +1,100 @@
+<odoo>
+    <template id="step_contact" name="Ticket Wizard - Contact Info">
+        <t t-call="website.layout">
+            <div id="wrap">
+                <div class="container pps-wizard-container py-5">
+                    <div class="pps-wizard-card">
+                        <pre style="background:#fee;padding:8px;font-size:12px;" t-esc="debug_info"/>
+                        <h2 class="mb-2">Tell us how to reach you</h2>
+                        <p class="text-muted mb-4">Just a few details, then describe what you need — no need to categorize anything.</p>
+
+                        <t t-if="is_guest">
+                            <form action="/support/new/contact/save" method="POST" class="pps-wizard-form">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                <div class="pps-field">
+                                    <label>Contact Person Name</label>
+                                    <input type="text" name="name" required="required" t-att-value="prefill['name']"/>
+                                </div>
+                                <div class="pps-field">
+                                    <label>Company Name</label>
+                                    <input type="text" name="company" required="required" t-att-value="prefill['company']"/>
+                                </div>
+                                <div class="pps-field">
+                                    <label>Phone Number</label>
+                                    <input type="text" name="mobile" required="required" t-att-value="prefill['mobile']"/>
+                                </div>
+                                <button type="submit" class="pps-btn-primary">Continue</button>
+                            </form>
+                        </t>
+
+                        <t t-if="not is_guest">
+                            <div class="pps-readonly-block">
+                                <div class="pps-readonly-row"><span>Contact Person</span><strong t-esc="prefill['name']"/></div>
+                                <div class="pps-readonly-row"><span>Company</span><strong t-esc="prefill['company']"/></div>
+                                <div class="pps-readonly-row"><span>Phone</span><strong t-esc="prefill['mobile']"/></div>
+                            </div>
+                            <a href="/support/new/device" class="pps-btn-primary d-inline-block mt-3">Continue</a>
+                        </t>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="step_device" name="Ticket Wizard - Device Selection">
+        <t t-call="website.layout">
+            <div id="wrap">
+                <div class="container pps-wizard-container py-5">
+                    <div class="pps-wizard-card">
+                        <h2 class="mb-4">Which device is this about?</h2>
+                        <form action="/support/new/device/save" method="POST" class="pps-wizard-form">
+                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                            <t t-if="not is_guest">
+                                <div class="pps-field">
+                                    <label>Select Device</label>
+                                    <select name="asset_id" id="pps_asset_select" required="required">
+                                        <option value="">-- Select a device --</option>
+                                        <t t-foreach="assets" t-as="asset">
+                                            <option t-att-value="asset.id" t-esc="asset.name"/>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div id="pps_asset_info" class="pps-info-box" style="display:none;">
+                                    <div><strong>Location:</strong> <span id="pps_info_location"/></div>
+                                    <div><strong>SLA:</strong> <span id="pps_info_sla"/></div>
+                                    <div><strong>Remote Response:</strong> <span id="pps_info_response"/></div>
+                                    <div><strong>Onsite Response:</strong> <span id="pps_info_onsite"/></div>
+                                </div>
+                            </t>
+
+                            <t t-if="is_guest">
+                                <div class="pps-field">
+                                    <label>Device Brand</label>
+                                    <input type="text" name="brand" required="required"/>
+                                </div>
+                                <div class="pps-field">
+                                    <label>Device Model</label>
+                                    <input type="text" name="model" required="required"/>
+                                </div>
+                                <div class="pps-field">
+                                    <label>Serial Number (if known)</label>
+                                    <input type="text" name="serial"/>
+                                </div>
+                                <div class="pps-field">
+                                    <label>Device Location Address</label>
+                                    <input type="text" name="location" required="required"/>
+                                </div>
+                                <div class="pps-info-box">
+                                    <strong>SLA:</strong> Free tier (standard response time — no active contract)
+                                </div>
+                            </t>
+
+                            <button type="submit" class="pps-btn-primary mt-3">Continue</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

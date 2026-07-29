@@ -1,0 +1,23 @@
+<odoo>
+    <record id="view_pps_asset_form_inherit_contract" model="ir.ui.view">
+        <field name="name">pps.asset.form.inherit.contract</field>
+        <field name="model">pps.asset</field>
+        <field name="inherit_id" ref="pps_asset.view_pps_asset_form"/>
+        <field name="arch" type="xml">
+            <field name="pps_location_id" position="after">
+                <field name="contract_id"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_pps_asset_list_inherit_contract" model="ir.ui.view">
+        <field name="name">pps.asset.list.inherit.contract</field>
+        <field name="model">pps.asset</field>
+        <field name="inherit_id" ref="pps_asset.view_pps_asset_list"/>
+        <field name="arch" type="xml">
+            <field name="pps_model_id" position="after">
+                <field name="contract_id"/>
+            </field>
+        </field>
+    </record>
+</odoo>

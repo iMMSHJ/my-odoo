@@ -1,0 +1,16 @@
+<odoo>
+    <record id="action_pps_asset_brand" model="ir.actions.act_window">
+        <field name="name">Asset Brands</field>
+        <field name="res_model">pps.asset.brand</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_pps_asset_model" model="ir.actions.act_window">
+        <field name="name">Asset Models</field>
+        <field name="res_model">pps.asset.model</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_pps_asset_brand" name="Brands" parent="menu_pps_asset_root" action="action_pps_asset_brand" sequence="10"/>
+    <menuitem id="menu_pps_asset_model" name="Models" parent="menu_pps_asset_root" action="action_pps_asset_model" sequence="20"/>
+</odoo>
