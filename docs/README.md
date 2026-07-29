@@ -96,6 +96,10 @@
 پیش‌نیازهای فنی فاز ۰ — نسخه Odoo، ماژول‌های OCA بررسی‌شده، ریسک‌های سازگاری.
 - [DOC-040 — OCA & Prerequisites Plan](14-prerequisites/DOC-040-oca-and-prerequisites-plan.md)
 
+## 15 — Ecosystem Architecture
+تصمیمات معماری بالادستی (سطح گروه/هلدینگ) و رابطه‌شان با این پروژه.
+- [DOC-050 — Ecosystem Frontend & API Gateway Architecture](15-ecosystem-architecture/DOC-050-ecosystem-frontend-api-gateway-architecture.md)
+
 ---
 
 ## وضعیت اسناد (Status Summary)

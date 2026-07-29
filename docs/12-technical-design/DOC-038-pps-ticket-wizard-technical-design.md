@@ -38,30 +38,30 @@ pps_ticket_wizard/
 
 # 3. Wizard State Machine
 
-**به‌روزرسانی (طبق DOC-039 §6.3):** یک Step جدید «نوع درخواست» قبل از Page 1 اضافه شد که Team مقصد Ticket را تعیین می‌کند: **سرویس دستگاه / IT / آموزش**.
+**⚠️ اصلاحیه (۲۷ تیر ۱۴۰۵ — لغو تصمیم قبلی DOC-039 §6.3):** Step «انتخاب نوع درخواست» **حذف شد**. دلیل: تست واقعی UI نشان داد از مشتری خواستن این‌که از قبل درخواستش را دسته‌بندی کند (دستگاه/IT/آموزش) اشتباه است — مشتری معمولاً نمی‌داند دقیقاً درخواستش در کدام دسته می‌گنجد، و حتی ممکن است تشخیصش اشتباه باشد. **اصل درست:** مشتری فقط باید بگوید *چه کمکی نیاز دارد* (آزاد، متنی)؛ دسته‌بندی (Team/نوع) کار تیم داخلی (Service Manager) است، بعد از خواندن توضیح، نه پیش‌شرط ثبت تیکت. **مهم‌ترین چیز، ثبت‌شدن تیکت است.**
 
-برای حفظ سادگی v1 (طبق اصل «شلوغش نکنیم»): فقط مسیر **سرویس دستگاه** از Page 2 (انتخاب دستگاه/محل) عبور می‌کند. برای IT و آموزش، Page 2 (که مخصوص Asset است) **حذف/Skip** می‌شود و مستقیم به مرحله توضیحات می‌رویم — چون این دو نوع لزوماً به یک Asset ثبت‌شده گره نخورده‌اند.
+به‌جای «Page 2 فقط برای نوع سرویس دستگاه»، Page 2 (انتخاب دستگاه) اکنون **همیشه اختیاری** است — مستقل از هر دسته‌بندی، صرفاً چون مشتری ممکن است بداند درخواستش به کدام دستگاه مربوط است یا نداند.
 
 ```mermaid
 stateDiagram-v2
     [*] --> IdentifyUser
-    IdentifyUser --> RequestType: انتخاب نوع درخواست
+    IdentifyUser --> Page1_ContactInfo
 
-    RequestType --> Page1_ContactInfo: دستگاه / IT / آموزش
+    Page1_ContactInfo --> Page2_DeviceAndLocation
 
-    Page1_ContactInfo --> Page2_DeviceAndLocation: نوع = سرویس دستگاه
-    Page1_ContactInfo --> DescriptionStep: نوع = IT یا آموزش (Page 2 حذف می‌شود)
-
-    Page2_DeviceAndLocation --> AutoDetect: دستگاه و محل مشخص شد
+    Page2_DeviceAndLocation --> AutoDetect: دستگاهی انتخاب شد
+    Page2_DeviceAndLocation --> DescriptionStep: رد شد (Skip — دستگاه نامشخص/بی‌ربط)
     AutoDetect --> DescriptionStep
 
-    DescriptionStep --> Review: توضیح و پیوست ثبت شد
+    DescriptionStep --> Review: توضیح آزاد + پیوست ثبت شد
     Review --> Submit: تأیید نهایی
     Submit --> Confirmation
     Confirmation --> [*]
 ```
 
-هر گذار (Transition) دقیقاً منطبق بر یک قانون کسب‌وکار در DOC-006 یا DOC-039 است — Wizard هیچ مرحله اضافه‌ای نسبت به مستندات تأییدشده اضافه نمی‌کند.
+**دسته‌بندی داخلی (بعد از ثبت، نه قبل):** Service Manager بعد از خواندن توضیح آزاد مشتری، Team مناسب (سرویس دستگاه / IT / آموزش) را روی Ticket تنظیم می‌کند — این یک اقدام Backend است، نه بخشی از تجربه مشتری.
+
+هر گذار (Transition) دقیقاً منطبق بر یک قانون کسب‌وکار در DOC-006 است — Wizard هیچ مرحله اضافه‌ای نسبت به مستندات تأییدشده اضافه نمی‌کند.
 
 ---
 
@@ -72,50 +72,44 @@ stateDiagram-v2
 |---|---|---|
 | Session/Login State | Odoo `request.env.user` | تعیین Guest vs Customer |
 
-## Step 2 — Request Type (جدید)
-| فیلد | نوع | الزامی | نگاشت Odoo | یادداشت |
-|---|---|---|---|---|
-| Request Type | Select (۳ گزینه) | ✅ | `helpdesk.ticket.team_id` | گزینه‌ها: «سرویس دستگاه»، «خدمات IT»، «آموزش» — طبق DOC-039 §6.2 |
+## Page 1 — Contact Info
 
-> SLA در همه حالت‌ها از یک موتور واحد محاسبه می‌شود (DOC-039 §10.1)؛ این انتخاب فقط Team/دسته‌بندی را تعیین می‌کند، نه موتور SLA جدا.
+**تصمیم نهایی (۲۷ تیر ۱۴۰۵):**
+- **Guest:** فرم قابل‌ویرایش — Contact Person Name, Company Name, Phone Number (هر سه الزامی).
+- **Customer (لاگین‌کرده):** **بدون فرم** — فقط نمایش **غیرقابل‌ویرایش** (Read-only) مقادیر موجود در `res.partner` (نه Input). چون این اطلاعات از قبل توی دیتابیس هست، نیازی به گرفتن دوباره از کاربر نیست؛ فقط برای اطمینان نمایش داده می‌شود.
 
-## Page 1 — Contact Info (مشترک برای Guest و Customer، در هر سه نوع درخواست)
-
-**Guest:** فیلدها به‌صورت دستی پر می‌شوند.
-**Customer:** فیلدها از `res.partner` پیش‌بارگذاری و قابل تأیید/ویرایش هستند (مطابق DOC-006: «هیچ گزینه‌ای پیش‌فرض انتخاب نمی‌شود» برای لیست‌ها، اما اطلاعات تماس شناخته‌شده نمایش داده می‌شود).
-
-| فیلد | نوع | الزامی | نگاشت Odoo |
+| فیلد | نوع | الزامی (Guest) | نگاشت Odoo |
 |---|---|---|---|
-| Name | Text | ✅ | `res.partner.name` |
-| Company | Text | ❌ | `res.partner.parent_id` / تکست آزاد (Guest) |
-| Mobile | Text | ✅ | `res.partner.mobile` |
-| Email | Text | ❌ | `res.partner.email` |
-| City | Select | ❌ | `res.partner.city_id` |
+| Contact Person Name | Text | ✅ | `res.partner.name` |
+| Company Name | Text | ✅ | `res.partner.parent_id.name` (Customer) / تکست آزاد (Guest) |
+| Phone Number | Text | ✅ | `res.partner.mobile` یا `res.partner.phone` (Fallback اگر mobile خالی بود) |
 
-## Page 2 — Device & Location (فقط برای نوع «سرویس دستگاه»)
+> فیلدهای Email و City از طراحی حذف شدند (طبق تصمیم ساده‌سازی این نشست) — فقط سه فیلد بالا لازم است.
 
-**Guest:** فیلدهای دستگاه به‌صورت دستی + یک فیلد آزاد محل قرارگیری دستگاه.
-**Customer:** انتخاب Asset از لیست موجود؛ محل قرارگیری از `pps_asset.location` پیش‌بارگذاری می‌شود ولی قابل ویرایش است (دستگاه ممکن است جابه‌جا شده باشد).
+## Page 2 — Device Selection
+
+**تصمیم نهایی:** بر خلاف نسخه قبلی (اختیاری برای همه)، اکنون:
+- **Customer:** یک Dropdown از **تمام Assetهای مشتری، فارغ از وضعیت Contract** (چه دارای قرارداد باشند چه نه) — به محض انتخاب، SLA و آدرس محل دستگاه به‌صورت لحظه‌ای (AJAX) نمایش داده می‌شود.
+- **Guest:** چون دستگاهی در سیستم ثبت نشده، فرم دستی «مشخصات نصبی دستگاه» را پر می‌کند؛ SLA نمایشی همیشه سطح **Free/Fallback** است (طبق DOC-039 §10.1).
 
 | فیلد | نوع | الزامی | نگاشت Odoo | یادداشت |
 |---|---|---|---|---|
-| Device Brand | Select | ✅ (Guest) | برای Auto-match `maintenance.equipment` | فقط Guest |
-| Device Model | Select | ✅ (Guest) | همان | فقط Guest |
-| Serial Number | Text | ❌ | `maintenance.equipment.serial_no` | فقط Guest |
-| Asset (دستگاه) | Select | ✅ (Customer) | `pps_asset` مرتبط با `partner_id` جاری | فقط Customer |
-| Device Location | Text/Select (Site) | ✅ | `pps_asset.location_id` (Customer) یا آدرس آزاد (Guest) | محل نصب/استقرار دستگاه — برای برنامه‌ریزی Onsite Visit ضروری است |
+| Select Device | Dropdown | ✅ (Customer) | `pps.asset` (فیلتر `partner_id`، بدون فیلتر Contract) | فقط Customer |
+| Device Brand / Model / Serial | Text آزاد | ✅ برند/مدل، ❌ سریال | — | فقط Guest، ورودی دستی |
+| Device Location Address | Text | ✅ | — | فقط Guest، آدرس آزاد |
+| نمایش لحظه‌ای: Location, SLA, Remote/Onsite Response | Read-only (AJAX) | — | از `pps.asset.contract_id.pps_sla_id` یا Fallback | فقط Customer، بعد از انتخاب دستگاه |
 
 **Serial Number Disambiguation (Customer):** فقط اگر بیش از یک Asset مشابه وجود داشته باشد نمایش داده می‌شود (DOC-006 «Kodak RIP SN:...»). طبق قانون طلایی *Never ask if the system already knows*، اگر فقط یک Asset مطابقت داشته باشد، انتخاب به‌صورت خودکار انجام می‌شود.
 
-**IT / آموزش:** این صفحه کاملاً حذف می‌شود؛ در صورت نیاز، اشاره به دستگاه/نرم‌افزار مرتبط در همان فیلد توضیحات (Step بعد) به‌صورت متن آزاد ذکر می‌شود — بدون فیلد ساختاریافته اضافه در v1.
+**اگر Page 2 رد شد (Skip):** این صفحه کاملاً حذف می‌شود؛ در صورت نیاز، اشاره به دستگاه/نرم‌افزار مرتبط در همان فیلد توضیحات (Step بعد) به‌صورت متن آزاد ذکر می‌شود — بدون فیلد ساختاریافته اضافه در v1.
 
-## Step 3 — Auto Detect (Read-only، فقط برای «سرویس دستگاه»)
+## Step 3 — Auto Detect (Read-only، فقط اگر دستگاهی در Page 2 انتخاب شده باشد)
 داده‌های زیر از Asset/Device انتخاب‌شده در Page 2 استخراج و به‌صورت Read-only نمایش داده می‌شوند:
-- Customer, Site, Service Package, Contract, SLA/Service Policy, Warranty, Previous Service History
+- Customer, Site, Contract, SLA/Service Policy, Warranty, Previous Service History
 
-منبع: متد کمکی `_get_asset_context(asset_id)` در `ticket_wizard_helper.py` که به مدل‌های `pps_contract`, `pps_package`, `pps_sla` Join می‌زند.
+منبع: متد کمکی `_get_asset_context(asset_id)` در `ticket_wizard_helper.py` که به مدل‌های `pps_contract`, `pps_sla` Join می‌زند.
 
-برای IT/آموزش، این Step هم Skip می‌شود؛ SLA برای این دو نوع طبق قانون Fallback در DOC-039 §10.1 محاسبه می‌شود (سطح قرارداد مشتری در صورت وجود، وگرنه پایین‌ترین سطح).
+اگر Page 2 رد شده باشد، این Step هم Skip می‌شود؛ SLA طبق قانون Fallback در DOC-039 §10.1 محاسبه می‌شود (سطح قرارداد مشتری در صورت وجود، وگرنه پایین‌ترین سطح).
 
 ## Step 4 — Description & Attachment
 | فیلد | نوع | الزامی |
@@ -222,8 +216,37 @@ flowchart LR
 
 1. **Attachment:** حل شد — هر فرمت تصویری با هر کمپرسی پذیرفته می‌شود (بخش ۴، Step 4).
 2. **CRM Lead برای Guest ناشناخته:** حل شد — Lead ساخته نمی‌شود (طبق DOC-039 §10، تصمیم پروژه سادگی v1 است). به‌جای آن، مکانیزم سبک «جلوگیری از ثبت تکراری Guest» (بخش ۵) برای کنترل درخواست‌های تکراری کافی است.
-3. **نوع درخواست (IT/آموزش):** حل شد — Step جدید «Request Type» اضافه شد (بخش ۳ و ۴)، طبق DOC-039 §6.3.
+3. **نوع درخواست (IT/آموزش):** ~~حل شد — Step جدید «Request Type» اضافه شد طبق DOC-039 §6.3~~ **⚠️ لغو شد (۲۷ تیر ۱۴۰۵، بخش ۳)** — تست واقعی UI نشان داد دسته‌بندی پیش از ثبت اشتباه است؛ مشتری هیچ دسته‌بندی انتخاب نمی‌کند، فقط آزادانه توضیح می‌دهد. دسته‌بندی (Team) بعداً توسط Service Manager انجام می‌شود.
 
 ---
 
-# DOC-038 — LOCKED ✅
+# 8. وضعیت پیاده‌سازی (به‌روزرسانی حین کدنویسی، ۲۷ تیر ۱۴۰۵)
+
+## 8.1 تصمیم فنی — Controller + QWeb به‌جای Owl Component
+
+**تصمیم:** برخلاف فرض اولیه (Owl Component، DOC-036 §4.2)، نسخه v1 ویزارد با **Controller پایتون + QWeb Template رندرشده سمت سرور** ساخته می‌شود، نه Owl Component تک‌صفحه‌ای.
+
+**دلیل:** طی توسعه‌ی ماژول‌های قبلی (`pps_asset` و بقیه)، لایه‌ی JS/Widget مدرن Odoo 19 (OWL2) دو بار منبع مشکل واقعی بود (DateTimePicker، Chatter — DOC-049 §9). با توجه به محدودیت‌های محیط توسعه (بدون دسترسی مستقیم به ابزار Debug مرورگر)، مسیر Controller+QWeb پایدارتر و سریع‌تر قابل تحویل تشخیص داده شد.
+
+**Trade-off پذیرفته‌شده:** هر مرحله یک Route/صفحه‌ی جداست (Reload بین مراحل)، نه تجربه‌ی بدون-Reload یک SPA. طراحی بصری (`pps_theme`) و منطق چندمرحله‌ای کسب‌وکاری دست‌نخورده می‌ماند.
+
+## 8.2 مسیرها (Routes) پیاده‌سازی‌شده
+
+| Route | نقش |
+|---|---|
+| `/support/new` | نمایش مستقیم Page 1 (Contact Info) — بدون هیچ Step دسته‌بندی پیشین |
+| `/support/new/contact/save` | ذخیره Contact Info، رفتن به Page 2 |
+
+بقیه Route ها (Device/Location، Description، Review، Confirmation) در تکرارهای بعدی اضافه می‌شوند.
+
+## 8.3 نکته فنی — Session State
+
+داده‌ی هر مرحله در `request.session['pps_wizard']` (Session سمت سرور) نگه‌داری می‌شود، نه در URL یا LocalStorage — چون مرورگر Reload می‌شود بین مراحل (طبق ۸.۱).
+
+## 8.4 اصلاح باگ (حین تست) — دسترسی مستقیم به فیلد `partner.mobile`
+
+**یافته:** دسترسی مستقیم به فیلدهای `res.partner` (مثل `mobile`) داخل QWeb Template باعث خطای `AttributeError` شد (فیلد در این پیکربندی موجود نبود). **راه‌حل:** پیش‌بارگذاری مقادیر (`prefill`) همیشه در **Controller پایتون** با `getattr(partner, 'field', None)` محتاطانه آماده و به Template پاس داده می‌شود — هرگز دسترسی مستقیم به فیلدهای مدل داخل QWeb.
+
+---
+
+# DOC-038 — LOCKED ✅ (با اصلاحیه‌های ۲۷ تیر ۱۴۰۵ — بخش‌های ۳ و ۸)
