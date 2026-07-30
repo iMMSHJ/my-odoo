@@ -1,3 +1,0 @@
-id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_pps_package_user,pps.package.user,model_pps_package,base.group_user,1,1,1,0
-access_pps_package_system,pps.package.system,model_pps_package,base.group_system,1,1,1,1
