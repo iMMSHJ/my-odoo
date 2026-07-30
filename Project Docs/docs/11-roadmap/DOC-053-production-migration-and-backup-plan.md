@@ -143,4 +143,44 @@ tar -czf ~/backups/configs-full-$(date +%Y%m%d).tar.gz ~/backups/configs/
 
 ---
 
-**Status:** LOCKED
+# 6. ساختار نهایی Repository (به‌روزرسانی — تصمیم نهایی)
+
+**تصمیم نهایی (نه سازمان‌دهی بر اساس Component، بلکه دقیقاً به‌تفکیک سرور):**
+
+```
+my-odoo/
+├── Project Docs/               ← مستقل از هر سروری، شامل کل مستندات پروژه
+├── i-srv-1/                    ← Business Server
+│   ├── opt/odoo/
+│   │   ├── custom_addons/      ← کد کامل pps_asset, pps_contract, pps_sla, pps_ticket_wizard
+│   │   ├── oca/VERSIONS.md     ← فقط لیست Repository/Branch/Commit (نه کد کامل)
+│   │   ├── src/VERSIONS.md     ← همان، برای سورس اصلی Odoo
+│   │   └── third_party/iran/   ← کد کامل (چون Repository مستقل ندارند)
+│   ├── etc/
+│   │   ├── odoo/odoo.conf.template   ← بدون admin_passwd واقعی
+│   │   ├── systemd/odoo.service
+│   │   ├── postgresql/          ← جای‌گذاری‌شده، هنوز بدون تنظیم اختصاصی
+│   │   └── redis/                ← جای‌گذاری‌شده، Redis هنوز نصب نشده
+│   ├── api/                     ← جای‌گذاری‌شده برای API Gateway آینده
+│   └── var/
+└── i-srv-2/                     ← جای‌گذاری‌شده برای Frontend/HAProxy آینده
+```
+
+## 6.1 روش کار — پوشه‌ی «آینه» (Mirror)، نه Live Directory
+
+**تصمیم مهم:** Repository مستقیماً از `/opt/odoo/` (مسیر واقعی سرور) Push نمی‌شود — چون این کار می‌توانست با جابه‌جایی فیزیکی فایل‌ها، سرور زنده‌ی Odoo را بشکند (`addons_path` در `odoo.conf` به مسیر فعلی اشاره دارد).
+
+به‌جایش، یک پوشه‌ی جدا و مستقل (`~/git-manage/my-odoo/`) ساخته شد که:
+- ساختار دقیق دلخواه (`i-srv-1/opt/odoo/...`) را دارد
+- با یک اسکریپت (`~/git-manage/scripts/sync.sh`) از مسیر واقعی (`/opt/odoo/custom_addons`) به‌روز می‌شود (فقط Copy، نه Move)
+- سرور زنده هرگز دست‌نخورده باقی می‌ماند
+
+**قانون برای آینده:** قبل از هر Commit جدید، ابتدا `sync.sh` اجرا شود تا آخرین تغییرات کد از سرور واقعی به پوشه‌ی Mirror منتقل شود.
+
+## 6.2 امنیت Token — درس گرفته‌شده
+
+یک بار در همین نشست، Token GitHub به‌طور کامل و بدون Mask در چت ارسال شد؛ بلافاصله باطل و جایگزین شد. **قانون دائمی:** Token هرگز نباید کامل در پیام (چه به انسان، چه به AI) نوشته شود — همیشه مستقیم در ترمینال استفاده و نتیجه (بدون خود Token) گزارش شود.
+
+---
+
+**Status:** LOCKED — ساختار Repository اجرا و روی GitHub تأیید شد (Commit `26b0a56`).
