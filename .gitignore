@@ -23,3 +23,5 @@ venv/
 # Git
 .DS_Store
 Thumbs.db
+src/
+oca/
