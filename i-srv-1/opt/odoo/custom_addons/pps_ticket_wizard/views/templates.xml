@@ -4,7 +4,6 @@
             <div id="wrap">
                 <div class="container pps-wizard-container py-5">
                     <div class="pps-wizard-card">
-                        <pre style="background:#fee;padding:8px;font-size:12px;" t-esc="debug_info"/>
                         <h2 class="mb-2">Tell us how to reach you</h2>
                         <p class="text-muted mb-4">Just a few details, then describe what you need — no need to categorize anything.</p>
 
@@ -59,6 +58,14 @@
                                             <option t-att-value="asset.id" t-esc="asset.name"/>
                                         </t>
                                     </select>
+                                    <t t-foreach="assets" t-as="asset">
+                                        <div t-att-id="'pps_asset_data_%s' % asset.id"
+                                             t-att-data-location="assets_info.get(asset.id, {}).get('location', '')"
+                                             t-att-data-sla-name="assets_info.get(asset.id, {}).get('sla_name', '')"
+                                             t-att-data-sla-response="assets_info.get(asset.id, {}).get('sla_response', '')"
+                                             t-att-data-sla-onsite="assets_info.get(asset.id, {}).get('sla_onsite', '')"
+                                             style="display:none;"/>
+                                    </t>
                                 </div>
                                 <div id="pps_asset_info" class="pps-info-box" style="display:none;">
                                     <div><strong>Location:</strong> <span id="pps_info_location"/></div>
@@ -92,6 +99,92 @@
 
                             <button type="submit" class="pps-btn-primary mt-3">Continue</button>
                         </form>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="step_description" name="Ticket Wizard - Description">
+        <t t-call="website.layout">
+            <div id="wrap">
+                <div class="container pps-wizard-container py-5">
+                    <div class="pps-wizard-card">
+                        <h2 class="mb-4">Tell us what's wrong</h2>
+                        <form action="/support/new/description/save" method="POST" enctype="multipart/form-data" class="pps-wizard-form">
+                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                            <div class="pps-field">
+                                <label>Error Code (if shown on the device)</label>
+                                <input type="text" name="error_code"/>
+                            </div>
+                            <div class="pps-field">
+                                <label>Describe the issue</label>
+                                <textarea name="description" rows="5" required="required"/>
+                            </div>
+                            <div class="pps-field">
+                                <label>Attach Photo or Video (optional)</label>
+                                <input type="file" name="attachments" multiple="multiple" accept="image/*,video/*"/>
+                            </div>
+
+                            <button type="submit" class="pps-btn-primary">Continue</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="step_review" name="Ticket Wizard - Review">
+        <t t-call="website.layout">
+            <div id="wrap">
+                <div class="container pps-wizard-container py-5">
+                    <div class="pps-wizard-card">
+                        <h2 class="mb-4">Review your request</h2>
+
+                        <div class="pps-readonly-block mb-3">
+                            <div class="pps-readonly-row"><span>Contact</span><strong t-esc="contact.get('name')"/></div>
+                            <div class="pps-readonly-row"><span>Phone</span><strong t-esc="contact.get('mobile')"/></div>
+                        </div>
+
+                        <div class="pps-readonly-block mb-3">
+                            <div class="pps-readonly-row"><span>Error Code</span><strong t-esc="issue.get('error_code') or '-'"/></div>
+                            <div class="pps-readonly-row"><span>Description</span><strong t-esc="issue.get('description')"/></div>
+                        </div>
+
+                        <div class="pps-info-box mb-3">
+                            <strong>Expected SLA:</strong>
+                            <span t-esc="sla.name if sla else 'Standard'"/> —
+                            <span t-esc="dict(sla._fields['remote_response_time'].selection).get(sla.remote_response_time, '') if sla else ''"/>
+                        </div>
+
+                        <form action="/support/new/submit" method="POST">
+                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                            <button type="submit" class="pps-btn-primary">Submit Request</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="step_confirmation" name="Ticket Wizard - Confirmation">
+        <t t-call="website.layout">
+            <div id="wrap">
+                <div class="container pps-wizard-container py-5">
+                    <div class="pps-wizard-card text-center">
+                        <h2 class="mb-3">Thank you!</h2>
+                        <p class="pps-tracking-code" t-esc="result['tracking_code']"/>
+                        <p>Your expected response time: <strong t-esc="result['sla_response']"/></p>
+
+                        <t t-if="result['is_guest']">
+                            <div class="pps-info-box mt-4">
+                                <strong>Note:</strong> As a guest, you cannot track this request online.
+                                Please keep your tracking code above — you can inquire by phone using it.
+                                <br/>
+                                <a href="/web/signup" class="pps-btn-primary d-inline-block mt-2">Create an Account to Track Online</a>
+                            </div>
+                        </t>
                     </div>
                 </div>
             </div>

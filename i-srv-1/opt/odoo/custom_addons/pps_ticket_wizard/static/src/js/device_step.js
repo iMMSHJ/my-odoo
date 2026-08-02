@@ -9,19 +9,15 @@ document.addEventListener('DOMContentLoaded', function () {
             infoBox.style.display = 'none';
             return;
         }
-        fetch('/support/new/device/info', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({jsonrpc: '2.0', method: 'call', params: {asset_id: assetId}}),
-        })
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-            var result = data.result || {};
-            document.getElementById('pps_info_location').textContent = result.location || '-';
-            document.getElementById('pps_info_sla').textContent = result.sla_name || '-';
-            document.getElementById('pps_info_response').textContent = result.sla_response || '-';
-            document.getElementById('pps_info_onsite').textContent = result.sla_onsite || '-';
+        // Data is already rendered server-side into hidden divs (no AJAX,
+        // to avoid a race condition with session writes — see DOC-038 §8.4).
+        var source = document.getElementById('pps_asset_data_' + assetId);
+        if (source) {
+            document.getElementById('pps_info_location').textContent = source.dataset.location || '-';
+            document.getElementById('pps_info_sla').textContent = source.dataset.slaName || '-';
+            document.getElementById('pps_info_response').textContent = source.dataset.slaResponse || '-';
+            document.getElementById('pps_info_onsite').textContent = source.dataset.slaOnsite || '-';
             infoBox.style.display = 'block';
-        });
+        }
     });
 });
