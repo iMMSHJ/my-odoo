@@ -1,0 +1,53 @@
+<odoo>
+    <record id="view_pps_package_form" model="ir.ui.view">
+        <field name="name">pps.package.form</field>
+        <field name="model">pps.package</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="partner_id"/>
+                        <field name="contract_id"/>
+                    </group>
+                    <notebook>
+                        <page string="Assets">
+                            <field name="asset_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="pps_brand_id"/>
+                                    <field name="pps_model_id"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_pps_package_list" model="ir.ui.view">
+        <field name="name">pps.package.list</field>
+        <field name="model">pps.package</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="contract_id"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_pps_package" model="ir.actions.act_window">
+        <field name="name">Packages</field>
+        <field name="res_model">pps.package</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_pps_package" name="Packages" parent="pps_asset.menu_pps_asset_root" action="action_pps_package" sequence="30"/>
+</odoo>
